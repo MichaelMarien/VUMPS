@@ -3,7 +3,8 @@ from tensornetwork import TensorNetwork
 
 class MPS(TensorNetwork):
 
-    def __init__(self, tensor, left_virtual=0, physical=1, right_virtual=2, backend="numpy"):
+    def __init__(self, tensor, left_virtual=0, physical=1, right_virtual=2,
+                 backend="numpy"):
         super().__init__(backend)
 
         # Create the network
