@@ -1,0 +1,5 @@
+jax
+jaxlib
+pytype>=2019.06.21
+pytest
+torch>=1.1
