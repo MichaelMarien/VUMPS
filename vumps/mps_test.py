@@ -25,3 +25,11 @@ def test_mps_init_wrong_dimensions():
     tensor = np.random.randn(3, 2, 2)
     with pytest.raises(ValueError):
         MPS(tensor)
+
+
+def test_qr_pos():
+    tensor = np.random.randn(3, 2, 3)
+    el = np.random.randn(3, 3)
+    mps = MPS(tensor)
+    q, r = mps._qr_pos(el)
+    np.testing.assert_array_almost_equal(np.dot(q.T, q), np.eye(3))
