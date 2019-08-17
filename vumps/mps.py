@@ -15,8 +15,8 @@ class MPS(TensorNetwork):
         tensor = self.backend.transpose(tensor,
                                         [left_virtual, physical, right_virtual])
         self.A = self.add_node(tensor, axis_names=self.axis_order)
-        self.virtual_dimension = self.backend(self.A.tensor.shape)[0]
-        self.physical_dimension = self.backend(self.A.tensor.shape)[1]
+        self._virtual_dimension = self.backend(self.A.tensor.shape)[0]
+        self._physical_dimension = self.backend(self.A.tensor.shape)[1]
 
     def _QRPos(self, L):
         #LA = np.dot(L, self.backend.reshape(self.A.tensor,
@@ -40,3 +40,11 @@ class MPS(TensorNetwork):
 
     def truncate(self):
         raise NotImplementedError
+
+    @property
+    def virtual_dimension(self):
+        return self._virtual_dimension
+
+    @property
+    def physical_dimension(self):
+        return self._physical_dimension
