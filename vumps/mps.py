@@ -1,5 +1,4 @@
 from tensornetwork import TensorNetwork
-import numpy as np
 
 
 class MPS(TensorNetwork):
