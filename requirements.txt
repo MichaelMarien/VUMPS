@@ -1,1 +1,1 @@
-tensornetework>=0.0.7
+tensornetwork>=0.0.7
