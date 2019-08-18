@@ -33,22 +33,22 @@ def test_mps_to_matrix():
 
     expected = np.reshape(tensor, (6, 3))
     actual = mps.to_matrix(left_indices=["left_virtual", "physical"],
-                        right_indices=["right_virtual"])
+                           right_indices=["right_virtual"])
     np.testing.assert_allclose(actual, expected)
 
     expected = np.reshape(np.transpose(tensor, (1, 0, 2)), (6, 3))
     actual = mps.to_matrix(left_indices=["physical", "left_virtual"],
-                        right_indices=["right_virtual"])
+                           right_indices=["right_virtual"])
     np.testing.assert_allclose(actual, expected)
 
     expected = np.reshape(np.transpose(tensor, (0, 2, 1)), (3, 6))
     actual = mps.to_matrix(left_indices=["left_virtual"],
-                        right_indices=["right_virtual", "physical"])
+                           right_indices=["right_virtual", "physical"])
     np.testing.assert_allclose(actual, expected)
 
     expected = np.reshape(tensor, (3, 6))
     actual = mps.to_matrix(left_indices=["left_virtual"],
-                        right_indices=["physical", "right_virtual"])
+                           right_indices=["physical", "right_virtual"])
     np.testing.assert_allclose(actual, expected)
 
 
@@ -107,8 +107,8 @@ def test_mps_apply_mixed_transfer_matrix():
 
 
 def test_mps_transfer_matrix():
-     tensor = np.random.randn(2, 3, 2) + 1j*np.random.randn(2, 3, 2)
-     mps = MPS(tensor)
-     actual = mps.transfer_matrix
-     expected = np.einsum('ijk,ajb->iakb', tensor, np.conj(tensor))
-     np.testing.assert_allclose(actual.tensor, expected)
+    tensor = np.random.randn(2, 3, 2) + 1j*np.random.randn(2, 3, 2)
+    mps = MPS(tensor)
+    actual = mps.transfer_matrix
+    expected = np.einsum('ijk,ajb->iakb', tensor, np.conj(tensor))
+    np.testing.assert_allclose(actual.tensor, expected)
