@@ -49,6 +49,9 @@ class MPS(Node):
     def left_orthonormalize(self, initial, epsilon):
         raise NotImplementedError
 
+    def right_orthonormalize(self, initial, epsilon):
+        raise NotImplementedError
+
     def to_matrix(self, left_indices=None, right_indices=None):
         if len(left_indices + right_indices) != 3:
             raise ValueError("Please provide exactly 3 indices")
