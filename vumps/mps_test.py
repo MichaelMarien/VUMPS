@@ -132,9 +132,9 @@ def test_mps_left_orthonormalize_gives_fixed_point_qrpos():
     tensor = np.random.randn(2, 3, 2)
     mps = MPS(tensor)
     L0 = np.random.randn(2, 2)
-    AL, L, lamb = mps.left_orthonormalize(L0, 10**(-6))
+    _, L, _ = mps.left_orthonormalize(L0, 10**(-6))
 
-    AL2, L2 = mps._QRPos(L)
+    _, L2 = mps._QRPos(L)
     np.testing.assert_array_almost_equal(L/np.linalg.norm(L),
                                          L2/np.linalg.norm(L2))
 
@@ -143,9 +143,9 @@ def test_mps_left_orthonormalize_gives_fixed_point_mixed_transfer_matrix():
     tensor = np.random.randn(2, 3, 2)
     mps = MPS(tensor)
     L0 = np.random.randn(2, 2)
-    AL, L, lamb = mps.left_orthonormalize(L0, 10**(-6))
+    AL, L, _ = mps.left_orthonormalize(L0, 10**(-6))
 
-    actual = mps.apply_mixed_transfer_matrix(np.reshape(np.conj(AL), (2,3,2)),
+    actual = mps.apply_mixed_transfer_matrix(np.reshape(np.conj(AL), (2, 3, 2)),
                                              L)
     expected = L
     np.testing.assert_array_almost_equal(actual/norm(actual),
