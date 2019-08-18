@@ -157,7 +157,7 @@ def test_mps_left_orthonormalize_gives_correct_lambda():
     mps = MPS(tensor)
     transfer_matrix = np.reshape(mps.transfer_matrix.tensor, (4, 4))
     L0 = np.random.randn(2, 2)
-    AL, L, lamb = mps.left_orthonormalize(L0, 10**(-6))
+    _, _, lamb = mps.left_orthonormalize(L0, 10**(-6))
     val = np.max(eigvals(transfer_matrix))
     np.testing.assert_almost_equal(np.sqrt(val), lamb)
 
@@ -166,7 +166,7 @@ def test_mps_left_orthonormalize_gives_same_uniform_mps():
     tensor = np.random.randn(2, 3, 2)
     mps = MPS(tensor)
     L0 = np.random.randn(2, 2)
-    AL, L, lamb = mps.left_orthonormalize(L0, 10**(-10))
+    AL, _, lamb = mps.left_orthonormalize(L0, 10**(-10))
     ALt = np.conj(np.reshape(AL, (2, 3, 2)))
     mixed = np.reshape(np.einsum('ijk,ajb->iakb', tensor, ALt), (4, 4))
     val = np.max(eigvals(mixed))
