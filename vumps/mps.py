@@ -32,7 +32,8 @@ class MPS(Node):
         net = TensorNetwork(self.backend)
         a = net.add_node(self.tensor, axis_names=self.axis_order,
                          name="A")
-        el = net.add_node(el, axis_names=["bra_virtual", "ket_virtual"], name="L")
+        el = net.add_node(el, axis_names=["bra_virtual", "ket_virtual"],
+                          name="L")
         edge = net.connect(edge1=el["ket_virtual"], edge2=a["left_virtual"])
         la = net.backend.reshape(net.contract(edge).tensor,
                                  np.array([self.virtual_dimension,

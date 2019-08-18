@@ -145,6 +145,8 @@ def test_mps_left_orthonormalize_gives_fixed_point_mixed_transfer_matrix():
     L0 = np.random.randn(2, 2)
     AL, L, lamb = mps.left_orthonormalize(L0, 10**(-6))
 
-    actual = mps.apply_mixed_transfer_matrix(np.reshape(np.conj(AL), (2,3,2)), L)
+    actual = mps.apply_mixed_transfer_matrix(np.reshape(np.conj(AL), (2,3,2)),
+                                             L)
     expected = L
-    np.testing.assert_array_almost_equal(actual/norm(actual), expected/norm(expected))
+    np.testing.assert_array_almost_equal(actual/norm(actual),
+                                         expected/norm(expected))
