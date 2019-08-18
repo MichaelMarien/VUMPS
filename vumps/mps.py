@@ -62,10 +62,10 @@ class MPS(Node):
             mix_shape = (self.virtual_dimension**2, self.virtual_dimension**2)
             mix_matvec = partial(self.apply_mixed_transfer_matrix, np.conj(ALt))
             mix = LinearOperator(shape=mix_shape, matvec=mix_matvec)
-            value, vector = eigs(mix, k=1, tol=delta/10, v0=L.flatten())
+            _, vector = eigs(mix, k=1, tol=delta/10, v0=L.flatten())
             vector = np.reshape(vector, (self.virtual_dimension,
                                          self.virtual_dimension))
-            q, vector = np.linalg.qr(vector, mode="reduced")
+            _, vector = np.linalg.qr(vector, mode="reduced")
             phases = 1j*np.angle(np.diag(vector))
             L = np.dot(np.diag(np.exp(phases)), vector)
             L = L/np.linalg.norm(L, ord=2)
