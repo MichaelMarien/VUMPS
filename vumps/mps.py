@@ -83,9 +83,6 @@ class MPS(Node):
     def norm(self):
         raise NotImplementedError
 
-    def apply_transfer_matrix(self):
-        raise NotImplementedError
-
     def truncate(self):
         raise NotImplementedError
 
