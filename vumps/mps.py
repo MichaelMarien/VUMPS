@@ -1,6 +1,7 @@
 from tensornetwork import Node, TensorNetwork
 import numpy as np
-from scipy.sparse.linalg import LinearOperator
+from scipy.sparse.linalg import LinearOperator, eigs
+from functools import partial
 
 
 class MPS(Node):
@@ -27,12 +28,20 @@ class MPS(Node):
         self._physical_dimension = dimensions[1]
         self.backend = backend
 
+    @staticmethod
+    def _qr_pos_mat(mat):
+        q, r = np.linalg.qr(mat, mode="reduced")
+        phases = 1j*np.angle(np.diag(r))
+        return (np.dot(q, np.diag(np.exp(-phases))),
+                np.dot(np.diag(np.exp(phases)), r))
+
     def _QRPos(self, el):
         net = TensorNetwork(self.backend)
         a = net.add_node(self.tensor, axis_names=self.axis_order,
                          name="A")
-        el = net.add_node(el, axis_names=["left", "right"], name="L")
-        edge = net.connect(edge1=el["right"], edge2=a["left_virtual"])
+        el = net.add_node(el, axis_names=["bra_virtual", "ket_virtual"],
+                          name="L")
+        edge = net.connect(edge1=el["ket_virtual"], edge2=a["left_virtual"])
         la = net.backend.reshape(net.contract(edge).tensor,
                                  np.array([self.virtual_dimension,
                                            self.physical_dimension,
@@ -41,13 +50,32 @@ class MPS(Node):
 
         mla = la.to_matrix(left_indices=["left_virtual", "physical"],
                            right_indices=["right_virtual"])
-        a_new, l_new = np.linalg.qr(mla, mode="reduced")
-        phases = 1j*np.angle(np.diag(a_new))
-        return (np.dot(a_new, np.diag(np.exp(-phases))),
-                np.dot(np.diag(np.exp(phases)), l_new))
+        return self._qr_pos_mat(mla)
 
-    def left_orthonormalize(self, initial, epsilon):
-        raise NotImplementedError
+    def left_orthonormalize(self, L, eta):
+        L = L/np.linalg.norm(L, ord=2)
+        AL, L = self._QRPos(L)
+        lamb = np.linalg.norm(L, ord=2)
+        L = L/lamb
+
+        delta = 1
+        while delta > eta:
+            ALt = np.reshape(AL, (self.virtual_dimension,
+                                  self.physical_dimension,
+                                  self.virtual_dimension))
+            mix_shape = (self.virtual_dimension**2, self.virtual_dimension**2)
+            mix_matvec = partial(self.apply_mixed_transfer_matrix, np.conj(ALt))
+            mix = LinearOperator(shape=mix_shape, matvec=mix_matvec)
+            _, vec = eigs(mix, k=1, tol=delta/10, v0=L.flatten())
+            _, L = self._qr_pos_mat(np.reshape(vec, (self.virtual_dimension,
+                                                     self.virtual_dimension)))
+            L = L/np.linalg.norm(L, ord=2)
+            Lold = L
+            AL, L = self._QRPos(L)
+            lamb = np.linalg.norm(L, ord=2)
+            L = L/lamb
+            delta = np.linalg.norm(L-Lold, ord=2)
+        return AL, L, lamb
 
     def right_orthonormalize(self, initial, epsilon):
         raise NotImplementedError
@@ -101,12 +129,13 @@ class MPS(Node):
         return self.apply_mixed_transfer_matrix(np.conj(self.tensor), v)
 
     def apply_mixed_transfer_matrix(self, B, v):
+        v = np.reshape(v, (B.shape[0], self.virtual_dimension))
         net = TensorNetwork(self.backend)
         ket = net.add_node(self.tensor, axis_names=self.ket_axis_order,
                            name="ket")
         bra = net.add_node(B, axis_names=self.bra_axis_order,
                            name="bar")
-        vector = net.add_node(v, axis_names=["ket_virtual", "bra_virtual"],
+        vector = net.add_node(v, axis_names=["bra_virtual", "ket_virtual"],
                               name="vector")
         ket_edge = net.connect(edge1=ket["ket_left_virtual"],
                                edge2=vector["ket_virtual"])
@@ -117,6 +146,6 @@ class MPS(Node):
         net.contract(ket_edge)
         net.contract(bra_edge)
         result = net.contract(physical_edge)
-        result.reorder_edges(edge_order=[ket.get_edge("ket_right_virtual"),
-                                         bra.get_edge("bra_right_virtual")])
+        result.reorder_edges(edge_order=[bra.get_edge("bra_right_virtual"),
+                                         ket.get_edge("ket_right_virtual")])
         return result.tensor
