@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 from vumps.mps import MPS
-from numpy.linalg import norm
+from numpy.linalg import norm, eigvals
 
 
 def test_mps_init():
@@ -119,11 +119,11 @@ def test_mps_left_orthonormalize_gives_fixed_point_single_layer():
     tensor = np.random.randn(2, 3, 2)
     mps = MPS(tensor)
     L0 = np.random.randn(2, 2)
-    AL, L, lamb = mps.left_orthonormalize(L0, 10**(-6))
+    AL, L, lamb = mps.left_orthonormalize(L0, 10**(-10))
 
     expected = np.einsum('ijk,ai->ajk', tensor, L)
     actual = np.einsum('ijk,ka->ija', np.reshape(AL, (2, 3, 2)), L)
-    np.testing.assert_almost_equal(norm(expected)/norm(actual), lamb, decimal=5)
+    np.testing.assert_almost_equal(norm(expected)/norm(actual), lamb, decimal=8)
     np.testing.assert_array_almost_equal(actual/np.linalg.norm(actual),
                                          expected/np.linalg.norm(expected))
 
@@ -150,3 +150,24 @@ def test_mps_left_orthonormalize_gives_fixed_point_mixed_transfer_matrix():
     expected = L
     np.testing.assert_array_almost_equal(actual/norm(actual),
                                          expected/norm(expected))
+
+
+def test_mps_left_orthonormalize_gives_correct_lambda():
+    tensor = np.random.randn(2, 3, 2)
+    mps = MPS(tensor)
+    transfer_matrix = np.reshape(mps.transfer_matrix.tensor, (4, 4))
+    L0 = np.random.randn(2, 2)
+    AL, L, lamb = mps.left_orthonormalize(L0, 10**(-6))
+    val = np.max(eigvals(transfer_matrix))
+    np.testing.assert_almost_equal(np.sqrt(val), lamb)
+
+
+def test_mps_left_orthonormalize_gives_same_uniform_mps():
+    tensor = np.random.randn(2, 3, 2)
+    mps = MPS(tensor)
+    L0 = np.random.randn(2, 2)
+    AL, L, lamb = mps.left_orthonormalize(L0, 10**(-10))
+    ALt = np.conj(np.reshape(AL, (2, 3, 2)))
+    mixed = np.reshape(np.einsum('ijk,ajb->iakb', tensor, ALt), (4, 4))
+    val = np.max(eigvals(mixed))
+    np.testing.assert_almost_equal(val, lamb, decimal=8)

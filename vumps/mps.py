@@ -28,6 +28,13 @@ class MPS(Node):
         self._physical_dimension = dimensions[1]
         self.backend = backend
 
+    @staticmethod
+    def _qr_pos_mat(mat):
+        q, r = np.linalg.qr(mat, mode="reduced")
+        phases = 1j*np.angle(np.diag(r))
+        return (np.dot(q, np.diag(np.exp(-phases))),
+                np.dot(np.diag(np.exp(phases)), r))
+
     def _QRPos(self, el):
         net = TensorNetwork(self.backend)
         a = net.add_node(self.tensor, axis_names=self.axis_order,
@@ -43,10 +50,7 @@ class MPS(Node):
 
         mla = la.to_matrix(left_indices=["left_virtual", "physical"],
                            right_indices=["right_virtual"])
-        a_new, l_new = np.linalg.qr(mla, mode="reduced")
-        phases = 1j*np.angle(np.diag(l_new))
-        return (np.dot(a_new, np.diag(np.exp(-phases))),
-                np.dot(np.diag(np.exp(phases)), l_new))
+        return self._qr_pos_mat(mla)
 
     def left_orthonormalize(self, L, eta):
         L = L/np.linalg.norm(L, ord=2)
@@ -62,12 +66,9 @@ class MPS(Node):
             mix_shape = (self.virtual_dimension**2, self.virtual_dimension**2)
             mix_matvec = partial(self.apply_mixed_transfer_matrix, np.conj(ALt))
             mix = LinearOperator(shape=mix_shape, matvec=mix_matvec)
-            _, vector = eigs(mix, k=1, tol=delta/10, v0=L.flatten())
-            vector = np.reshape(vector, (self.virtual_dimension,
-                                         self.virtual_dimension))
-            _, vector = np.linalg.qr(vector, mode="reduced")
-            phases = 1j*np.angle(np.diag(vector))
-            L = np.dot(np.diag(np.exp(phases)), vector)
+            _, vec = eigs(mix, k=1, tol=delta/10, v0=L.flatten())
+            _, L = self._qr_pos_mat(np.reshape(vec, (self.virtual_dimension,
+                                                     self.virtual_dimension)))
             L = L/np.linalg.norm(L, ord=2)
             Lold = L
             AL, L = self._QRPos(L)
