@@ -157,7 +157,7 @@ def test_mps_left_orthonormalize_gives_correct_lambda():
     mps = MPS(tensor)
     transfer_matrix = np.reshape(mps.transfer_matrix.tensor, (4, 4))
     L0 = np.random.randn(2, 2)
-    _, _, lamb = mps.left_orthonormalize(L0, 10**(-6))
+    _, _, lamb = mps.left_orthonormalize(L0, 10**(-10))
     val = np.max(eigvals(transfer_matrix))
     np.testing.assert_almost_equal(np.sqrt(val), lamb)
 
